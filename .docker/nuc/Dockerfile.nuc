@@ -32,23 +32,32 @@ RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/nul
 COPY . /app
 WORKDIR /app
 
-# install miniconda 
+# install miniforge (includes mamba)
 RUN wget \
-    https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    https://github.com/conda-forge/miniforge/releases/download/23.3.1-1/Miniforge3-23.3.1-1-Linux-x86_64.sh \
     && mkdir /root/.conda \
-    && bash Miniconda3-latest-Linux-x86_64.sh -b \
-    && rm -f Miniconda3-latest-Linux-x86_64.sh
+    && bash Miniforge3-23.3.1-1-Linux-x86_64.sh -b -p /root/miniconda3 \
+    && rm -f Miniforge3-23.3.1-1-Linux-x86_64.sh
 ENV PATH /root/miniconda3/bin:$PATH
 
 # setup polymetis conda env
 WORKDIR ${NUC_POLYMETIS_DIR}
-RUN conda env create -f ./polymetis/environment.yml && \
+RUN mamba env create -f ./polymetis/environment.yml && \
     conda run -n polymetis-local pip install -e ./polymetis
 SHELL ["conda", "run", "-n", "polymetis-local", "/bin/bash", "-c"]
 
-# build libfranka and polymetis
-RUN ./scripts/build_libfranka.sh ${LIBFRANKA_VERSION} && \
-    mkdir -p ./polymetis/build && \
+# build libfranka (with pinocchio API compatibility patch)
+RUN cd polymetis/src/clients/franka_panda_client/third_party/libfranka && \
+    git clean -fd && \
+    git checkout ${LIBFRANKA_VERSION} && \
+    git submodule update --init --recursive && \
+    sed -i 's/parentJoint/parent/g' src/robot_model.cpp && \
+    rm -rf build && mkdir build && cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF .. && \
+    cmake --build .
+
+# build polymetis
+RUN mkdir -p ./polymetis/build && \
     cd ./polymetis/build && \
     cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_FRANKA=ON -DBUILD_TESTS=ON -DBUILD_DOCS=ON && \
     make -j
