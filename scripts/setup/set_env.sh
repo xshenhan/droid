@@ -20,10 +20,15 @@ export VARIED_CAMERA_2_ID=$varied_camera_2_id
 export UBUNTU_PRO_TOKEN=$ubuntu_pro_token
 rm /tmp/droid_env_vars.sh
 
-if [ "$ROBOT_TYPE" = "panda" ]; then
+# Set LIBFRANKA_VERSION: respect pre-set value, otherwise default by robot type
+if [ -z "$LIBFRANKA_VERSION" ]; then
+    if [ "$ROBOT_TYPE" = "panda" ]; then
         export LIBFRANKA_VERSION=0.9.0
-else
+    else
         export LIBFRANKA_VERSION=0.18.0
+    fi
 fi
 
 echo "Done. ROBOT_TYPE=$ROBOT_TYPE, LIBFRANKA_VERSION=$LIBFRANKA_VERSION, NUC_IP=$NUC_IP"
+echo "  (To use a different libfranka version, set LIBFRANKA_VERSION before sourcing this script)"
+echo "  e.g.: LIBFRANKA_VERSION=0.15.0 source scripts/setup/set_env.sh"

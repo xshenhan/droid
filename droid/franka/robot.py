@@ -33,8 +33,10 @@ class FrankaRobot:
         time.sleep(5)
 
     def launch_robot(self):
-        self._robot = RobotInterface(ip_address="localhost")
-        self._gripper = GripperInterface(ip_address="localhost")
+        polymetis_port = int(os.environ.get("POLYMETIS_PORT", "50051"))
+        gripper_port = int(os.environ.get("GRIPPER_PORT", "50052"))
+        self._robot = RobotInterface(ip_address="localhost", port=polymetis_port)
+        self._gripper = GripperInterface(ip_address="localhost", port=gripper_port)
         self._max_gripper_width = self._gripper.metadata.max_width
         self._ik_solver = RobotIKSolver()
         self._controller_not_loaded = False

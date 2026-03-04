@@ -1,0 +1,41 @@
+services:
+  nuc-0.15.0:
+    image: ghcr.io/droid-dataset/droid_nuc:fr3-0.15.0
+    container_name: droid_nuc_0.15.0
+    environment:
+      ROBOT_TYPE: fr3
+      LIBFRANKA_VERSION: "0.15.0"
+      ROBOT_IP: "172.16.1.2"
+      NUC_IP: "172.16.1.3"
+      POLYMETIS_PORT: "50053"
+      GRIPPER_PORT: "50054"
+      ZERORPC_PORT: "4243"
+    volumes:
+      - ../../droid/misc/parameters.py:/app/droid/misc/parameters.py
+      - ../../config/fr3-0.15.0/franka_hardware.yaml:/app/droid/fairo/polymetis/polymetis/conf/robot_client/franka_hardware.yaml
+      - ../../config/fr3-0.15.0/franka_panda.yaml:/app/droid/fairo/polymetis/polymetis/conf/robot_model/franka_panda.yaml
+      - ../../droid/franka/launch_robot.sh:/app/droid/franka/launch_robot.sh
+      - ../../droid/franka/launch_gripper.sh:/app/droid/franka/launch_gripper.sh
+      - ../../droid/franka/robot.py:/app/droid/franka/robot.py
+      - ../../scripts/server/run_server.py:/app/scripts/server/run_server.py
+      - ../../build-artifacts/0.15.0/franka_panda_client:/app/droid/fairo/polymetis/polymetis/build/franka_panda_client
+    devices:
+      - "/dev:/dev"
+    privileged: true
+    network_mode: "host"
+    cap_add:
+      - SYS_NICE
+    ulimits:
+      rtprio: 99
+      memlock: 102400
+    deploy:
+      restart_policy:
+        condition: any
+    build:
+      context: ../../
+      dockerfile: .docker/nuc/Dockerfile.nuc
+      args:
+        ROBOT_TYPE: fr3
+        LIBFRANKA_VERSION: "0.15.0"
+        ROBOT_IP: "172.16.1.2"
+        NUC_IP: "172.16.1.3"

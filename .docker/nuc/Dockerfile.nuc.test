@@ -1,0 +1,28 @@
+# Start from the previously built image (has conda env ready)
+FROM ghcr.io/droid-dataset/droid_nuc:fr3
+
+ARG LIBFRANKA_VERSION=0.18.0
+
+# Copy updated source files (includes C++17 fix in CMakeLists.txt)
+COPY . /app
+WORKDIR /app/droid/fairo/polymetis
+
+SHELL ["conda", "run", "-n", "polymetis-local", "/bin/bash", "-c"]
+
+# Build libfranka with pinocchio API compatibility patch
+RUN cd polymetis/src/clients/franka_panda_client/third_party/libfranka && \
+    git clean -fd && \
+    git checkout ${LIBFRANKA_VERSION} && \
+    git submodule update --init --recursive && \
+    sed -i 's/parentJoint/parent/g' src/robot_model.cpp && \
+    rm -rf build && mkdir build && cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF .. && \
+    cmake --build .
+
+# Build polymetis
+RUN rm -rf ./polymetis/build && mkdir -p ./polymetis/build && \
+    cd ./polymetis/build && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_FRANKA=ON -DBUILD_TESTS=ON -DBUILD_DOCS=ON && \
+    make -j
+
+ENTRYPOINT ["/bin/bash"]

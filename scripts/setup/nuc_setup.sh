@@ -57,30 +57,10 @@ else
 fi
 
 
-# Read the parameter values from the Python script using awk and convert to env variables
+# Set environment variables (sources parameters.py, sets LIBFRANKA_VERSION)
+# To override libfranka version: export LIBFRANKA_VERSION=0.15.0 before running this script
 echo -e "\nSet environment variables from parameters file\n"
-
-PARAMETERS_FILE="$(git rev-parse --show-toplevel)/droid/misc/parameters.py"
-awk -F'[[:space:]]*=[[:space:]]*' '/^[[:space:]]*([[:alnum:]_]+)[[:space:]]*=/ && $1 != "ARUCO_DICT" { gsub("\"", "", $2); print "export " $1 "=" $2 }' "$PARAMETERS_FILE" > temp_env_vars.sh
-source temp_env_vars.sh
-export ROOT_DIR=$(git rev-parse --show-toplevel)
-export NUC_IP=$nuc_ip
-export ROBOT_IP=$robot_ip
-export LAPTOP_IP=$laptop_ip
-export SUDO_PASSWORD=$sudo_password
-export ROBOT_TYPE=$robot_type
-export ROBOT_SERIAL_NUMBER=$robot_serial_number
-export HAND_CAMERA_ID=$hand_camera_id
-export VARIED_CAMERA_1_ID=$varied_camera_1_id
-export VARIED_CAMERA_2_ID=$varied_camera_2_id
-export UBUNTU_PRO_TOKEN=$ubuntu_pro_token
-rm temp_env_vars.sh
-
-if [ "$ROBOT_TYPE" == "panda" ]; then
-        export LIBFRANKA_VERSION=0.9.0
-else
-        export LIBFRANKA_VERSION=0.10.0
-fi
+source "$(git rev-parse --show-toplevel)/scripts/setup/set_env.sh"
 
 # build control server container 
 

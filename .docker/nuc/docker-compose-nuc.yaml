@@ -1,37 +1,62 @@
-version: "3"
+x-nuc-common: &nuc-common
+  devices:
+    - "/dev:/dev"
+  privileged: true
+  network_mode: "host"
+  cap_add:
+    - SYS_NICE
+  ulimits:
+    rtprio: 99
+    memlock: 102400
+  deploy:
+    restart_policy:
+      condition: any
 
-services: 
-  setup_nuc:
-    image: ghcr.io/droid-dataset/droid_nuc:${ROBOT_TYPE}
+services:
+  nuc-0.18.0:
+    <<: *nuc-common
+    image: ghcr.io/droid-dataset/droid_nuc:${ROBOT_TYPE}-0.18.0
+    container_name: droid_nuc_0.18.0
     environment:
       ROBOT_TYPE: ${ROBOT_TYPE}
-      LIBFRANKA_VERSION: ${LIBFRANKA_VERSION}
+      LIBFRANKA_VERSION: "0.18.0"
       NUC_IP: ${NUC_IP}
-      ROBOT_IP: ${ROBOT_IP}
+      ROBOT_IP: "172.16.0.2"
       LAPTOP_IP: ${LAPTOP_IP}
     volumes:
       - ${ROOT_DIR}/droid/misc/parameters.py:/app/droid/misc/parameters.py
-      - ${ROOT_DIR}/config/${ROBOT_TYPE}/franka_hardware.yaml:/app/droid/fairo/polymetis/polymetis/conf/robot_client/franka_hardware.yaml
-      - ${ROOT_DIR}/config/${ROBOT_TYPE}/franka_panda.yaml:/app/droid/fairo/polymetis/polymetis/conf/robot_model/franka_panda.yaml
-    build: 
+      - ${ROOT_DIR}/config/fr3/franka_hardware.yaml:/app/droid/fairo/polymetis/polymetis/conf/robot_client/franka_hardware.yaml
+      - ${ROOT_DIR}/config/fr3/franka_panda.yaml:/app/droid/fairo/polymetis/polymetis/conf/robot_model/franka_panda.yaml
+    build:
       context: ../../
       dockerfile: .docker/nuc/Dockerfile.nuc
       args:
-        ROBOT_TYPE: ${ROBOT_TYPE}
-        LIBFRANKA_VERSION: ${LIBFRANKA_VERSION}
+        ROBOT_TYPE: fr3
+        LIBFRANKA_VERSION: "0.18.0"
         NUC_IP: ${NUC_IP}
-        ROBOT_IP: ${ROBOT_IP}
+        ROBOT_IP: "172.16.0.2"
         LAPTOP_IP: ${LAPTOP_IP}
-    devices:
-      - "/dev:/dev"
-    privileged: true
-    network_mode: "host"
-    cap_add:
-      - SYS_NICE
-    ulimits:
-      rtprio: 99
-      memlock: 102400
-    deploy:
-      restart_policy: 
-        condition: any
 
+  nuc-0.15.0:
+    <<: *nuc-common
+    image: ghcr.io/droid-dataset/droid_nuc:${ROBOT_TYPE}-0.15.0
+    container_name: droid_nuc_0.15.0
+    environment:
+      ROBOT_TYPE: ${ROBOT_TYPE}
+      LIBFRANKA_VERSION: "0.15.0"
+      NUC_IP: ${NUC_IP}
+      ROBOT_IP: "172.16.1.2"
+      LAPTOP_IP: ${LAPTOP_IP}
+    volumes:
+      - ${ROOT_DIR}/droid/misc/parameters.py:/app/droid/misc/parameters.py
+      - ${ROOT_DIR}/config/fr3-0.15.0/franka_hardware.yaml:/app/droid/fairo/polymetis/polymetis/conf/robot_client/franka_hardware.yaml
+      - ${ROOT_DIR}/config/fr3-0.15.0/franka_panda.yaml:/app/droid/fairo/polymetis/polymetis/conf/robot_model/franka_panda.yaml
+    build:
+      context: ../../
+      dockerfile: .docker/nuc/Dockerfile.nuc
+      args:
+        ROBOT_TYPE: fr3
+        LIBFRANKA_VERSION: "0.15.0"
+        NUC_IP: ${NUC_IP}
+        ROBOT_IP: "172.16.1.2"
+        LAPTOP_IP: ${LAPTOP_IP}
